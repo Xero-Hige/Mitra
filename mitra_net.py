@@ -241,6 +241,3 @@ def test_model(model_path, data_folder):
         ax.set_title('predicted: {}'.format(TAGS_TRANSLATION[preds[j]]))
         imshow(images[j].transpose((1, 2, 0)))
     plt.show()
-
-
-test_model(None, "/home/hige/navent/Images")
