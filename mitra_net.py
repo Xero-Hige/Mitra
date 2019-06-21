@@ -247,7 +247,7 @@ def test_model(model_path, data_folder):
     model = create_net(model_path)
 
     random.shuffle(images)
-    images = images[:6]
+    images = images[:12]
 
     transform = transforms.Compose([
         transforms.Resize(256),
@@ -257,7 +257,7 @@ def test_model(model_path, data_folder):
                              [0.229, 0.224, 0.225])
     ])
 
-    images = [transform(Image.open(f'{data_folder}/{img_name}')).numpy() for img_name in images]
+    images = [transform(Image.open(f'{data_folder}/{img_name}').convert('RGB')).numpy() for img_name in images]
 
     array = numpy.array(images).astype(numpy.float32)
     input_data = Variable(torch.from_numpy(array))
@@ -274,7 +274,7 @@ def test_model(model_path, data_folder):
 
     for j in range(len(images)):
         images_so_far += 1
-        ax = plt.subplot(3, 2, images_so_far)
+        ax = plt.subplot(3, 4, images_so_far)
         ax.axis('off')
         ax.set_title('predicted: {}'.format(TAGS_TRANSLATION[preds[j]]))
         imshow(images[j].transpose((1, 2, 0)))
