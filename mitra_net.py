@@ -274,8 +274,8 @@ def test_model(model_path, data_folder):
 
     for j in range(len(images)):
         images_so_far += 1
-        ax = plt.subplot(3, 4, images_so_far)
+        ax = plt.subplot(6, 2, images_so_far)
         ax.axis('off')
-        ax.set_title('predicted: {}'.format(TAGS_TRANSLATION[preds[j]]))
+        ax.set_title('{}'.format(TAGS_TRANSLATION[preds[j]]))
         imshow(images[j].transpose((1, 2, 0)))
     plt.show()
