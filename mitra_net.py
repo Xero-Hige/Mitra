@@ -123,7 +123,7 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         _, true_tags = torch.max(tags.data, 0)
 
         batch_ac = torch.sum(preds == true_tags)
-        batch_loss = loss.data[0]
+        batch_loss = loss.item()
 
         print(f"Batch {batch_index//batch_size} - Ac: {batch_ac/batch_size} Loss: {batch_ac/batch_size}")
 
