@@ -76,7 +76,7 @@ def train_model(model,
     for e in range(1, epochs + 1):
 
         print(f"Epoch {e}")
-        train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer,
+        train_step(batch_size+e*7, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer,
                    train_data)
 
         if e % 5:
@@ -85,9 +85,10 @@ def train_model(model,
 
 
 def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer, train_data):
-    exp_lr_scheduler.step()
+    #exp_lr_scheduler.step()
     model.train(True)
     epoch_score = 0
+    epoch_loss = 0
     for batch_index in range(0, len(train_data), batch_size):
         batch = train_data[batch_index: batch_index + batch_size]
 
@@ -96,11 +97,9 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         for img_name, _tag in batch:
             img = Image.open(f'{dataset_folder}/{img_name}.jpg')
             input.append(data_transform(img).numpy())
-            tag = [0] * CLASSES
             _tag = int(_tag)
-            tag[_tag] = 1
             tags.append(int(_tag))
-            print(f"{batch_index} - [{img_name}|{TAGS_TRANSLATION[_tag]}] ({input[-1].shape})")
+            # print(f"{batch_index} - [{img_name}|{TAGS_TRANSLATION[_tag]}] ({input[-1].shape})")
 
         input = numpy.array(input).astype(numpy.float32)
         tags = numpy.array(tags).astype(numpy.long)
@@ -112,6 +111,8 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
             input = input.cuda()
             tags = tags.cuda()
 
+        optimizer.zero_grad()
+
         output = model(input)
         loss = criterion(output, tags)
 
@@ -121,8 +122,16 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         _, preds = torch.max(output.data, 1)
         _, true_tags = torch.max(tags.data, 0)
 
-        epoch_score += torch.sum(preds == true_tags)
+        batch_ac = torch.sum(preds == true_tags)
+        batch_loss = loss.data[0]
+
+        print(f"Batch {batch_index//batch_size} - Ac: {batch_ac/batch_size} Loss: {batch_ac/batch_size}")
+
+        epoch_score += batch_ac
+        epoch_loss += batch_loss
+
     print(f"Epoch score {epoch_score / len(train_data) * 100}%")
+    print(f"Epoch loss  {epoch_score / len(train_data) * 100}%")
 
 
 def test_step(batch_size, data_transform, dataset_folder, model, test_data):
@@ -136,8 +145,6 @@ def test_step(batch_size, data_transform, dataset_folder, model, test_data):
         for img_name, _tag in batch:
             img = Image.open(f'{dataset_folder}/{img_name}.jpg')
             input.append(data_transform(img).numpy())
-            tag = [0] * CLASSES
-            tag[int(_tag)] = 1
             tags.append(int(_tag))
 
         input = numpy.array(input).astype(numpy.float32)
@@ -166,8 +173,8 @@ def split_data(dataset_data):
         for _, file, class_number in csv.reader(data):
             whole_data.append((file, class_number))
     random.shuffle(whole_data)
-    train_size = len(whole_data) // 90
-    train_data, test_data = whole_data[:train_size], whole_data[train_size:]
+    train_size = len(whole_data) // 10
+    test_data, train_data = whole_data[:train_size], whole_data[train_size:]
     return train_data, test_data
 
 
