@@ -312,7 +312,7 @@ def generate_response(model_path, data_folder,csv_out):
         _, preds = torch.max(outs.data, 1)
 
         for i in range(len(img_names)):
-            results.append( (img_names[i].split(".")[0],preds[i]) )
+            results.append( (img_names[i].split(".")[0] , int(preds[i])) )
     
     import csv
     with open(csv_out,"w") as out:
