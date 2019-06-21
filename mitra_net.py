@@ -61,7 +61,7 @@ def train_model(model,
 
     data_transform = transforms.Compose([
         transforms.RandomApply([
-            transforms.RandomSizedCrop(224),
+            transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
             transforms.RandomPerspective(),
             transforms.RandomRotation(90),
@@ -73,7 +73,7 @@ def train_model(model,
                              std=[0.229, 0.224, 0.225])
     ])
 
-    for e in epochs:
+    for e in range(1,epochs+1):
 
         print(f"Epoch {e}")
         train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer,
