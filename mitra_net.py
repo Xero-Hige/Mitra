@@ -105,7 +105,14 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
                 print(f"Wrong image {img_name}")
                 continue
             tags.append(int(_tag))
-            # print(f"{batch_index} - [{img_name}|{TAGS_TRANSLATION[_tag]}] ({input[-1].shape})")
+
+            if tags[-1] == 2:
+                continue
+
+            input.append(data_transform(img).numpy())
+            tags.append(int(_tag))
+
+        # print(f"{batch_index} - [{img_name}|{TAGS_TRANSLATION[_tag]}] ({input[-1].shape})")
 
         input = numpy.array(input).astype(numpy.float32)
         tags = numpy.array(tags).astype(numpy.long)
@@ -133,7 +140,9 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
             batch_ac += 1 if preds[i] == true_tags[i] else 0
         batch_loss = loss.item()
 
-        print(f"Batch {batch_index // batch_size} - Ac: {batch_ac / batch_size} Loss: {batch_loss / batch_size}")
+        elements = len(tags)
+
+        print(f"Batch {batch_index // batch_size} - Ac: {batch_ac / elements} Loss: {batch_loss / elements}")
         print(f"{preds.cpu().numpy()}\n{true_tags.cpu().numpy()}")
 
         epoch_score += batch_ac
