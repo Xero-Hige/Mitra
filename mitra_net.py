@@ -293,9 +293,16 @@ def generate_response(model_path, data_folder,csv_out):
 
     results = []
     
+    import csv
+    with open(csv_out,"w") as out:
+        writer = csv.writer(out)
+    
     for i in range(9957):
-        batch_images = [transform(Image.open(f'{data_folder}/{i}.jpg').convert('RGB')).numpy()]
-        
+        try:
+            batch_images = [transform(Image.open(f'{data_folder}/{i}.jpg').convert('RGB')).numpy()]
+        except IOError:
+            continue
+            
         if not batch_images:
             break
         
@@ -309,9 +316,6 @@ def generate_response(model_path, data_folder,csv_out):
 
         _, preds = torch.max(outs.data, 1)
 
-        results.append( (i , int(preds[0])) )
-    
-    import csv
-    with open(csv_out,"w") as out:
-        writer = csv.writer(out)
-        writer.writerows(results)
+        with open(csv_out,"a") as out:
+            writer = csv.writer(out)
+            writer.writerow((i , int(preds[0])))
