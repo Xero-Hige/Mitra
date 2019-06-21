@@ -46,6 +46,7 @@ def create_net(stored_model="", layers_to_freeze=4):
 def train_model(model,
                 dataset_data,
                 dataset_folder,
+                store_path,
                 seed=None,
                 epochs=30,
                 batch_size=25):
@@ -76,8 +77,10 @@ def train_model(model,
     for e in range(1, epochs + 1):
 
         print(f"Epoch {e}")
-        train_step(batch_size+e*7, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer,
+        train_step(batch_size + e * 7, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer,
                    train_data)
+
+        torch.save(model.state_dict(), f"{store_path}/state_epoch_{e}.mdl")
 
         if e % 5:
             print(f"Test step (epoch {e})")
@@ -85,7 +88,7 @@ def train_model(model,
 
 
 def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer, train_data):
-    #exp_lr_scheduler.step()
+    # exp_lr_scheduler.step()
     model.train(True)
     epoch_score = 0
     epoch_loss = 0
@@ -95,9 +98,12 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         input = []
         tags = []
         for img_name, _tag in batch:
-            img = Image.open(f'{dataset_folder}/{img_name}.jpg')
-            input.append(data_transform(img).numpy())
-            _tag = int(_tag)
+            img = Image.open(f'{dataset_folder}/{img_name}.jpg').convert('RGB')
+            try:
+                input.append(data_transform(img).numpy())
+            except:
+                print(f"Wrong image {img_name}")
+                continue
             tags.append(int(_tag))
             # print(f"{batch_index} - [{img_name}|{TAGS_TRANSLATION[_tag]}] ({input[-1].shape})")
 
@@ -125,7 +131,7 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         batch_ac = torch.sum(preds == true_tags)
         batch_loss = loss.item()
 
-        print(f"Batch {batch_index//batch_size} - Ac: {batch_ac/batch_size} Loss: {batch_loss/batch_size}")
+        print(f"Batch {batch_index // batch_size} - Ac: {batch_ac / batch_size} Loss: {batch_loss / batch_size}")
 
         epoch_score += batch_ac
         epoch_loss += batch_loss
@@ -143,8 +149,12 @@ def test_step(batch_size, data_transform, dataset_folder, model, test_data):
         input = []
         tags = []
         for img_name, _tag in batch:
-            img = Image.open(f'{dataset_folder}/{img_name}.jpg')
-            input.append(data_transform(img).numpy())
+            img = Image.open(f'{dataset_folder}/{img_name}.jpg').convert('RGB')
+            try:
+                input.append(data_transform(img).numpy())
+            except:
+                print(f"Wrong image {img_name}")
+                continue
             tags.append(int(_tag))
 
         input = numpy.array(input).astype(numpy.float32)
@@ -182,8 +192,9 @@ def run_training(data_tags, dataset_folder, store_path, model_path=""):
     model = create_net(model_path)
     train_model(model=model,
                 dataset_data=data_tags,
-                dataset_folder=dataset_folder)
-    torch.save(model.state_dict(), store_path)
+                dataset_folder=dataset_folder,
+                store_path=store_path)
+    torch.save(model.state_dict(), f"{store_path}/trained.mdl")
 
 
 def imgshow(images, classes):
