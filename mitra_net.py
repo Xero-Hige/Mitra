@@ -128,11 +128,13 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         _, preds = torch.max(output.data, 1)
         true_tags = tags.data
 
-        batch_ac = torch.sum(preds == true_tags)
+        batch_ac = 0
+        for i in range(len(true_tags)):
+            batch_ac += 1 if preds[i] == true_tags[i] else 0
         batch_loss = loss.item()
 
         print(f"Batch {batch_index // batch_size} - Ac: {batch_ac / batch_size} Loss: {batch_loss / batch_size}")
-        print(f"{preds.data}\n{true_tags}")
+        print(f"{preds.numpy()}\n{true_tags.numpy()}")
 
         epoch_score += batch_ac
         epoch_loss += batch_loss
