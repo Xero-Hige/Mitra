@@ -23,18 +23,20 @@ stored_model = ""
 
 def create_net(stored_model="", layers_to_freeze=4):
     if stored_model:
-        model = torchvision.models.resnet50(pretrained=True)
+        model = torchvision.models.resnet50(pretrained=False)
         model.load_state_dict(torch.load(stored_model, map_location='cpu'))
     else:
         model = torchvision.models.resnet50(pretrained=True)
-        fc_layer_inputs = model.fc.in_features
-        model.fc = nn.Linear(fc_layer_inputs, CLASSES)
 
     actual_layer = 0
     for name, child in model.named_parameters():
         if "0.conv1" in name:
             actual_layer += 1
         child.requires_grad = layers_to_freeze < actual_layer
+
+    if not stored_model:
+        fc_layer_inputs = model.fc.in_features
+        model.fc = nn.Linear(fc_layer_inputs, CLASSES)
 
     if CUDA_ENABLED:
         model.cuda()
