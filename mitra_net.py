@@ -2,18 +2,17 @@ import csv
 import os
 import random
 
-import cv2
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
+from PIL import Image
 from matplotlib.pyplot import imshow
 from plotly.utils import numpy
 from torch.autograd import Variable
 from torch.optim import lr_scheduler
 from torchvision import transforms
-import matplotlib.pyplot as plt
-from PIL import Image
 
 CLASSES = 16
 CUDA_ENABLED = torch.cuda.is_available()
@@ -61,19 +60,19 @@ def train_model(model,
 
     data_transform = transforms.Compose([
         transforms.RandomApply([
-            transforms.RandomResizedCrop(224),
+            transforms.RandomResizedCrop(256),
             transforms.RandomHorizontalFlip(),
             transforms.RandomPerspective(),
             transforms.RandomRotation(90),
             transforms.RandomVerticalFlip()
         ]),
-        torchvision.transforms.Resize(224),
+        torchvision.transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225])
     ])
 
-    for e in range(1,epochs+1):
+    for e in range(1, epochs + 1):
 
         print(f"Epoch {e}")
         train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer,
@@ -230,7 +229,6 @@ def test_model(model_path, data_folder):
     array = numpy.array(images).astype(numpy.float32)
     print(Variable(torch.from_numpy(array)).data)
     outs = model(Variable(torch.from_numpy(array)))
-
 
     _, preds = torch.max(outs.data, 1)
 
