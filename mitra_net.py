@@ -97,7 +97,8 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
             img = Image.open(f'{dataset_folder}/{img_name}.jpg')
             input.append(data_transform(img).numpy())
             tag = [0] * CLASSES
-            tag[int(_tag)] = 1
+            _tag = int(_tag)
+            tag[_tag] = 1
             tags.append(int(_tag))
             print(f"{batch_index} - [{img_name}|{TAGS_TRANSLATION[_tag]}] ({input[-1].shape})")
 
