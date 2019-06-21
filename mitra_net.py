@@ -313,7 +313,7 @@ def generate_response(model_path, data_folder,csv_out):
             input_data = input_data.cuda()
 
         outs = model(input_data)
-
+        print(outs)
         _, preds = torch.max(outs.data, 1)
 
         with open(csv_out,"a") as out:
