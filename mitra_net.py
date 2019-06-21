@@ -279,3 +279,42 @@ def test_model(model_path, data_folder):
         ax.set_title('{}'.format(TAGS_TRANSLATION[preds[j]]))
         imshow(images[j].transpose((1, 2, 0)))
     plt.show()
+
+def generate_response(model_path, data_folder,csv_out):
+    images = os.listdir(data_folder)
+    model = create_net(model_path)
+
+    transform = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406],
+                             [0.229, 0.224, 0.225])
+    ])
+
+    results = []
+    
+    for i in range(len(images)//35+3):
+        img_names = images[35*i:35*i+1]
+        batch_images = [transform(Image.open(f'{data_folder}/{img_name}').convert('RGB')).numpy() for img_name in imag_names]
+        
+        if not batch_images:
+            break
+        
+        array = numpy.array(images).astype(numpy.float32)
+        input_data = Variable(torch.from_numpy(array))
+
+        if CUDA_ENABLED:
+            input_data = input_data.cuda()
+
+        outs = model(input_data)
+
+        _, preds = torch.max(outs.data, 1)
+
+        for i in range(len(img_names)):
+            results.append( (img_names[i],preds[i]) )
+    
+    import csv
+    with open(csv_out,"w") as out:
+        writer = csv.writer(out)
+        writer.writelines(results)
