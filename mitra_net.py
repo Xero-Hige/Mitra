@@ -319,3 +319,4 @@ def generate_response(model_path, data_folder,csv_out):
         with open(csv_out,"a") as out:
             writer = csv.writer(out)
             writer.writerow((i , int(preds[0])))
+            print((i , int(preds[0])))
