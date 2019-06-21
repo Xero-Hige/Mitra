@@ -317,4 +317,4 @@ def generate_response(model_path, data_folder,csv_out):
     import csv
     with open(csv_out,"w") as out:
         writer = csv.writer(out)
-        writer.writelines(results)
+        writer.writerows(results)
