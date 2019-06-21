@@ -281,7 +281,6 @@ def test_model(model_path, data_folder):
     plt.show()
 
 def generate_response(model_path, data_folder,csv_out):
-    images = os.listdir(data_folder)
     model = create_net(model_path)
 
     transform = transforms.Compose([
@@ -294,9 +293,8 @@ def generate_response(model_path, data_folder,csv_out):
 
     results = []
     
-    for i in range(len(images)//35+3):
-        img_names = images[35*i:35*i+1]
-        batch_images = [transform(Image.open(f'{data_folder}/{img_name}').convert('RGB')).numpy() for img_name in img_names]
+    for i in range(9957):
+        batch_images = [transform(Image.open(f'{data_folder}/{i}.jpg').convert('RGB')).numpy()]
         
         if not batch_images:
             break
