@@ -301,7 +301,7 @@ def generate_response(model_path, data_folder,csv_out):
         if not batch_images:
             break
         
-        array = numpy.array(images).astype(numpy.float32)
+        array = numpy.array(batch_images).astype(numpy.float32)
         input_data = Variable(torch.from_numpy(array))
 
         if CUDA_ENABLED:
@@ -312,7 +312,7 @@ def generate_response(model_path, data_folder,csv_out):
         _, preds = torch.max(outs.data, 1)
 
         for i in range(len(img_names)):
-            results.append( (img_names[i],preds[i]) )
+            results.append( (img_names[i].split(".")[0],preds[i]) )
     
     import csv
     with open(csv_out,"w") as out:
