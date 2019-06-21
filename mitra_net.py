@@ -242,8 +242,6 @@ TAGS_TRANSLATION = [
     "Sports"
 ]
 
-
-i
 def generate_response(model_path, data_folder,csv_out):
     model = create_net(model_path)
 
