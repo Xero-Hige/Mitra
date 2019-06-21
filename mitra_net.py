@@ -106,7 +106,7 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         tags = numpy.array(tags).astype(numpy.float32)
 
         input = Variable(torch.from_numpy(input), requires_grad=True)
-        tags = Variable(torch.from_numpy(tags), requires_grad=True)
+        tags = Variable(torch.from_numpy(tags), requires_grad=False)
 
         if CUDA_ENABLED:
             input = input.cuda()
