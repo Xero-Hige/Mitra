@@ -260,7 +260,11 @@ def test_model(model_path, data_folder):
     images = [transform(Image.open(f'{data_folder}/{img_name}')).numpy() for img_name in images]
 
     array = numpy.array(images).astype(numpy.float32)
-    print(Variable(torch.from_numpy(array)).data)
+    input_data = Variable(torch.from_numpy(array))
+    
+    if CUDA_ENABLED:
+        input_data = input_data.cuda()
+    
     outs = model(Variable(torch.from_numpy(array)))
 
     _, preds = torch.max(outs.data, 1)
