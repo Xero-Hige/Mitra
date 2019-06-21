@@ -99,6 +99,7 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
             tag = [0] * CLASSES
             tag[int(_tag)] = 1
             tags.append(int(_tag))
+            print(f"{batch_index} - ({input[-1].shape})")
 
         input = numpy.array(input).astype(numpy.float32)
         tags = numpy.array(tags).astype(numpy.float32)
