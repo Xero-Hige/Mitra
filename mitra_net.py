@@ -65,8 +65,9 @@ def train_model(model,
             transforms.RandomResizedCrop(297),
             transforms.RandomHorizontalFlip(),
             transforms.RandomPerspective(),
-            transforms.RandomRotation(90),
-            transforms.RandomVerticalFlip()
+            transforms.ColorJitter(),
+            transforms.RandomRotation(9),
+            #transforms.RandomVerticalFlip()
         ]),
         transforms.Resize(256),
         transforms.CenterCrop(224),
@@ -76,9 +77,9 @@ def train_model(model,
     ])
 
     for e in range(1, epochs + 1):
-
+        random.shuffle(train_data)
         print(f"Epoch {e}")
-        train_step(batch_size + e * 7, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer,
+        train_step(batch_size + (e-1) * 7, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer,
                    train_data)
 
         torch.save(model.state_dict(), f"{store_path}/state_epoch_{e}.mdl")
@@ -196,8 +197,8 @@ def split_data(dataset_data):
         for _, file, class_number in csv.reader(data):
             whole_data.append((file, class_number))
     random.shuffle(whole_data)
-    train_size = len(whole_data) // 10
-    test_data, train_data = whole_data[:train_size], whole_data[train_size:]
+    #train_size = len(whole_data) // 10
+    test_data, train_data = [], whole_data
     return train_data, test_data
 
 
@@ -242,44 +243,7 @@ TAGS_TRANSLATION = [
 ]
 
 
-def test_model(model_path, data_folder):
-    images = os.listdir(data_folder)
-    model = create_net(model_path)
-
-    random.shuffle(images)
-    images = images[:4]
-
-    transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406],
-                             [0.229, 0.224, 0.225])
-    ])
-
-    images = [transform(Image.open(f'{data_folder}/{img_name}').convert('RGB')).numpy() for img_name in images]
-
-    array = numpy.array(images).astype(numpy.float32)
-    input_data = Variable(torch.from_numpy(array))
-    
-    if CUDA_ENABLED:
-        input_data = input_data.cuda()
-    
-    outs = model(input_data)
-
-    _, preds = torch.max(outs.data, 1)
-
-    images_so_far = 0
-    fig = plt.figure()
-
-    for j in range(len(images)):
-        images_so_far += 1
-        ax = plt.subplot(2, 2, images_so_far)
-        ax.axis('off')
-        ax.set_title('{}'.format(TAGS_TRANSLATION[preds[j]]))
-        imshow(images[j].transpose((1, 2, 0)))
-    plt.show()
-
+i
 def generate_response(model_path, data_folder,csv_out):
     model = create_net(model_path)
 
