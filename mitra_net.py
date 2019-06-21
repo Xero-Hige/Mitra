@@ -37,7 +37,7 @@ def create_net(stored_model="", layers_to_freeze=4):
         fc_layer_inputs = model.fc.in_features
         model.fc = nn.Linear(fc_layer_inputs, CLASSES)
 
-    if torch.cuda.is_available():
+    if CUDA_ENABLED:
         model.cuda()
 
     return model
@@ -105,16 +105,12 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         input = numpy.array(input).astype(numpy.float32)
         tags = numpy.array(tags).astype(numpy.float32)
 
-        input = torch.from_numpy(input)
-        if torch.cuda.is_available():
-            input.cuda()
-
-        input = Variable(input, requires_grad=True)
+        input = Variable(torch.from_numpy(input), requires_grad=True)
         tags = Variable(torch.from_numpy(tags), requires_grad=True)
 
-        if torch.cuda.is_available():
-            input.cuda()
-            tags.cuda()
+        if CUDA_ENABLED:
+            input = input.cuda()
+            tags = tags.cuda()
 
         output = model(input)
         loss = criterion(output, tags)
@@ -150,9 +146,9 @@ def test_step(batch_size, data_transform, dataset_folder, model, test_data):
         input = Variable(torch.from_numpy(input), requires_grad=True)
         tags = Variable(torch.from_numpy(tags), requires_grad=True)
 
-        if torch.cuda.is_available():
-            input.cuda()
-            tags.cuda()
+        if CUDA_ENABLED:
+            input = input.cuda()
+            tags = tags.cuda()
 
         output = model(input)
 
