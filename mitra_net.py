@@ -103,7 +103,7 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
             print(f"{batch_index} - [{img_name}|{TAGS_TRANSLATION[_tag]}] ({input[-1].shape})")
 
         input = numpy.array(input).astype(numpy.float32)
-        tags = numpy.array(tags).astype(torch.long)
+        tags = numpy.array(tags).astype(numpy.long)
 
         input = Variable(torch.from_numpy(input), requires_grad=True)
         tags = Variable(torch.from_numpy(tags), requires_grad=False)
