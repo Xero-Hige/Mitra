@@ -37,7 +37,7 @@ def create_net(stored_model="", layers_to_freeze=4):
         fc_layer_inputs = model.fc.in_features
         model.fc = nn.Linear(fc_layer_inputs, CLASSES)
 
-    if CUDA_ENABLED:
+    if torch.cuda.is_available():
         model.cuda()
 
     return model
@@ -60,13 +60,14 @@ def train_model(model,
 
     data_transform = transforms.Compose([
         transforms.RandomApply([
-            transforms.RandomResizedCrop(256),
+            transforms.RandomResizedCrop(297),
             transforms.RandomHorizontalFlip(),
             transforms.RandomPerspective(),
             transforms.RandomRotation(90),
             transforms.RandomVerticalFlip()
         ]),
-        torchvision.transforms.Resize((224, 224)),
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225])
@@ -98,7 +99,7 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
             tag = [0] * CLASSES
             tag[int(_tag)] = 1
             tags.append(int(_tag))
-            print(f"{batch_index} - ({input[-1].shape})")
+            print(f"{batch_index} - [{img_name}|{TAGS_TRANSLATION[_tag]}] ({input[-1].shape})")
 
         input = numpy.array(input).astype(numpy.float32)
         tags = numpy.array(tags).astype(numpy.float32)
@@ -106,7 +107,7 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         input = Variable(torch.from_numpy(input), requires_grad=True)
         tags = Variable(torch.from_numpy(tags), requires_grad=True)
 
-        if CUDA_ENABLED:
+        if torch.cuda.is_available():
             input.cuda()
             tags.cuda()
 
@@ -144,7 +145,7 @@ def test_step(batch_size, data_transform, dataset_folder, model, test_data):
         input = Variable(torch.from_numpy(input), requires_grad=True)
         tags = Variable(torch.from_numpy(tags), requires_grad=True)
 
-        if CUDA_ENABLED:
+        if torch.cuda.is_available():
             input.cuda()
             tags.cuda()
 
