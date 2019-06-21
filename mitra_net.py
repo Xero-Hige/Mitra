@@ -134,7 +134,7 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         batch_loss = loss.item()
 
         print(f"Batch {batch_index // batch_size} - Ac: {batch_ac / batch_size} Loss: {batch_loss / batch_size}")
-        print(f"{preds.numpy()}\n{true_tags.numpy()}")
+        print(f"{preds.cpu().numpy()}\n{true_tags.cpu().numpy()}")
 
         epoch_score += batch_ac
         epoch_loss += batch_loss
