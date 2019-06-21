@@ -119,7 +119,7 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         optimizer.step()
 
         _, preds = torch.max(output.data, 1)
-        _, true_tags = torch.max(tags.data, 1)
+        _, true_tags = torch.max(tags.data, 0)
 
         epoch_score += torch.sum(preds == true_tags)
     print(f"Epoch score {epoch_score / len(train_data) * 100}%")
@@ -141,7 +141,7 @@ def test_step(batch_size, data_transform, dataset_folder, model, test_data):
             tags.append(int(_tag))
 
         input = numpy.array(input).astype(numpy.float32)
-        tags = numpy.array(tags).astype(numpy.float32)
+        tags = numpy.array(tags).astype(numpy.long)
 
         input = Variable(torch.from_numpy(input), requires_grad=True)
         tags = Variable(torch.from_numpy(tags), requires_grad=False)
@@ -153,7 +153,7 @@ def test_step(batch_size, data_transform, dataset_folder, model, test_data):
         output = model(input)
 
         _, preds = torch.max(output.data, 1)
-        _, true_tags = torch.max(tags.data, 1)
+        _, true_tags = torch.max(tags.data, 0)
 
         test_score += torch.sum(preds == true_tags)
     print(f"Test score {test_score / len(test_data) * 100}%")
