@@ -265,7 +265,7 @@ def test_model(model_path, data_folder):
     if CUDA_ENABLED:
         input_data = input_data.cuda()
     
-    outs = model(Variable(torch.from_numpy(array)))
+    outs = model(input_data)
 
     _, preds = torch.max(outs.data, 1)
 
