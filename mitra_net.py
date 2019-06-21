@@ -125,13 +125,13 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         batch_ac = torch.sum(preds == true_tags)
         batch_loss = loss.item()
 
-        print(f"Batch {batch_index//batch_size} - Ac: {batch_ac/batch_size} Loss: {batch_ac/batch_size}")
+        print(f"Batch {batch_index//batch_size} - Ac: {batch_ac/batch_size} Loss: {batch_loss/batch_size}")
 
         epoch_score += batch_ac
         epoch_loss += batch_loss
 
     print(f"Epoch score {epoch_score / len(train_data) * 100}%")
-    print(f"Epoch loss  {epoch_score / len(train_data) * 100}%")
+    print(f"Epoch loss  {epoch_loss / len(train_data) * 100}%")
 
 
 def test_step(batch_size, data_transform, dataset_folder, model, test_data):
