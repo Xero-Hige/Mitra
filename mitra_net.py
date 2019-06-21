@@ -23,6 +23,8 @@ stored_model = ""
 def create_net(stored_model="", layers_to_freeze=4):
     if stored_model:
         model = torchvision.models.resnet50(pretrained=False)
+        fc_layer_inputs = model.fc.in_features
+        model.fc = nn.Linear(fc_layer_inputs, CLASSES)
         model.load_state_dict(torch.load(stored_model, map_location='cpu'))
     else:
         model = torchvision.models.resnet50(pretrained=True)
