@@ -86,7 +86,7 @@ def train_model(model,
 
         if e % 5:
             print(f"Test step (epoch {e})")
-            test_step(batch_size, data_transform, dataset_folder, model, test_data)
+            #test_step(batch_size, data_transform, dataset_folder, model, test_data)
 
 
 def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer, train_data):
