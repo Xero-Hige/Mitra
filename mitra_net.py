@@ -28,15 +28,16 @@ def create_net(stored_model="", layers_to_freeze=4):
         model.load_state_dict(torch.load(stored_model, map_location='cpu'))
     else:
         model = torchvision.models.resnet50(pretrained=True)
-
-        actual_layer = 0
-        for name, child in model.named_parameters():
-            if "0.conv1" in name:
-                actual_layer += 1
-            child.requires_grad = layers_to_freeze < actual_layer
-
         fc_layer_inputs = model.fc.in_features
         model.fc = nn.Linear(fc_layer_inputs, CLASSES)
+
+    actual_layer = 0
+    for name, child in model.named_parameters():
+        if "0.conv1" in name:
+            actual_layer += 1
+        child.requires_grad = layers_to_freeze < actual_layer
+
+    model.fc.requires_grad = True
 
     if CUDA_ENABLED:
         model.cuda()
@@ -203,8 +204,8 @@ def split_data(dataset_data):
     return train_data, test_data
 
 
-def run_training(data_tags, dataset_folder, store_path, model_path=""):
-    model = create_net(model_path)
+def run_training(data_tags, dataset_folder, store_path, model_path="",frozen_layers=4):
+    model = create_net(model_path,frozen_layers)
     train_model(model=model,
                 dataset_data=data_tags,
                 dataset_folder=dataset_folder,
