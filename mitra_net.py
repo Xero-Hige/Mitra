@@ -94,6 +94,7 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
     model.train(True)
     epoch_score = 0
     epoch_loss = 0
+    total_elements = 0
     for batch_index in range(0, len(train_data), batch_size):
         batch = train_data[batch_index: batch_index + batch_size]
 
@@ -143,15 +144,15 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
         batch_loss = loss.item()
 
         elements = len(tags)
-
+        total_elements += elements
         print(f"Batch {batch_index // batch_size} - Ac: {batch_ac / elements} Loss: {batch_loss / elements}")
         print(f"{preds.cpu().numpy()}\n{true_tags.cpu().numpy()}")
 
         epoch_score += batch_ac
         epoch_loss += batch_loss
 
-    print(f"Epoch score {epoch_score / len(train_data) * 100}%")
-    print(f"Epoch loss  {epoch_loss / len(train_data) * 100}%")
+    print(f"Epoch score {epoch_score / total_elements * 100}%")
+    print(f"Epoch loss  {epoch_loss / total_elements * 100}%")
 
 
 def test_step(batch_size, data_transform, dataset_folder, model, test_data):
