@@ -254,15 +254,14 @@ def generate_response(model_path, data_folder,csv_out):
                              [0.229, 0.224, 0.225])
     ])
 
-    results = []
-    
-    import csv
+    images = [f"{i}.jpg" for i in range(11100) if os.path.isfile(f"{data_folder}/{i}.jpg")]
+
     with open(csv_out,"w") as out:
         writer = csv.writer(out)
     
-    for i in range(9957):
+    for i in range(0,11100,35):
         try:
-            batch_images = [transform(Image.open(f'{data_folder}/{i}.jpg').convert('RGB')).numpy()]
+            batch_images = [transform(Image.open(f'{data_folder}/{img_name}').convert('RGB')).numpy() for img_name in images[i:i+35]]
         except IOError:
             continue
             
@@ -276,10 +275,17 @@ def generate_response(model_path, data_folder,csv_out):
             input_data = input_data.cuda()
 
         outs = model(input_data)
-        print(outs)
+        
+        image_names = [ img_name.split(".")[0] for img_name in images[i:i+35] ]
+        
         _, preds = torch.max(outs.data, 1)
 
+        rows = []
+        for i in range(len(image_names)):
+            row = image_names[i],int(preds[i])
+            print(row)
+            rows.append(row)
+            
         with open(csv_out,"a") as out:
             writer = csv.writer(out)
-            writer.writerow((i , int(preds[0])))
-            print((i , int(preds[0])))
+            writer.writerows(rows)
