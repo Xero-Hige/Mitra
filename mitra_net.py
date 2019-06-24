@@ -19,6 +19,29 @@ CUDA_ENABLED = torch.cuda.is_available()
 
 stored_model = ""
 
+TRANSFORM_NORMAL = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+])
+
+AUGMENT_TRANSFORM = transforms.Compose([
+    transforms.Resize(314),
+    transforms.RandomApply([
+        transforms.RandomResizedCrop(297),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomPerspective(),
+        transforms.ColorJitter(.1, .1, .1, .01),
+        transforms.RandomRotation(9),
+        transforms.RandomVerticalFlip()
+    ]),
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    # transforms.Normalize(mean=[0.485, 0.456, 0.406],
+    #                     std=[0.229, 0.224, 0.225])
+])
+
 
 def create_net(stored_model="", layers_to_freeze=4):
     if stored_model:
@@ -51,7 +74,7 @@ def train_model(model,
                 store_path,
                 seed=None,
                 epochs=30,
-                batch_size=15):
+                batch_size=10):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD([p for p in model.parameters() if p.requires_grad], lr=0.001, momentum=0.9)
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
@@ -62,32 +85,39 @@ def train_model(model,
     train_data, test_data = split_data(dataset_data)
 
     data_transform = transforms.Compose([
+        transforms.Resize(314),
         transforms.RandomApply([
             transforms.RandomResizedCrop(297),
             transforms.RandomHorizontalFlip(),
             transforms.RandomPerspective(),
             transforms.ColorJitter(),
             transforms.RandomRotation(9),
-            #transforms.RandomVerticalFlip()
+            # transforms.RandomVerticalFlip()
         ]),
         transforms.Resize(256),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                             std=[0.229, 0.224, 0.225])
+        # transforms.Normalize(mean=[0.485, 0.456, 0.406],
+        #                     std=[0.229, 0.224, 0.225])
     ])
 
     for e in range(1, epochs + 1):
         random.shuffle(train_data)
         print(f"Epoch {e}")
-        ac = train_step(batch_size + (e-1) * 5, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer,
-                   train_data)
+        ac = train_step(batch_size + ((e-1) % 5) * 3, criterion, data_transform, dataset_folder, exp_lr_scheduler,
+                        model,
+                        optimizer, train_data)
 
-        torch.save(model.state_dict(), f"{store_path}/state_epoch_{e}({int(ac*100)}).mdl")
+        torch.save(model.state_dict(), f"{store_path}/state_epoch_{e}({int(ac * 100)}).mdl")
+        torch.cuda.empty_cache()
 
         if e % 5:
             print(f"Test step (epoch {e})")
-            #test_step(batch_size, data_transform, dataset_folder, model, test_data)
+            # test_step(batch_size, data_transform, dataset_folder, model, test_data)
+
+
+MINIBATCH_SIZE = 10
+START_CROP = 3
 
 
 def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer, train_data):
@@ -101,22 +131,20 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
 
         input = []
         tags = []
+
         for img_name, _tag in batch:
             img = Image.open(f'{dataset_folder}/{img_name}.jpg').convert('RGB')
-            try:
-                input.append(data_transform(img).numpy())
-            except:
-                print(f"Wrong image {img_name}")
-                continue
+            input.append(TRANSFORM_NORMAL(img).numpy())
             tags.append(int(_tag))
 
-            if tags[-1] == 2:
-                continue
-
-            input.append(data_transform(img).numpy())
+            input.append(AUGMENT_TRANSFORM(img).numpy())
             tags.append(int(_tag))
 
-        # print(f"{batch_index} - [{img_name}|{TAGS_TRANSLATION[_tag]}] ({input[-1].shape})")
+            if tags[-1] != 2:
+                input.append(AUGMENT_TRANSFORM(img).numpy())
+                tags.append(int(_tag))
+                input.append(AUGMENT_TRANSFORM(img).numpy())
+                tags.append(int(_tag))
 
         input = numpy.array(input).astype(numpy.float32)
         tags = numpy.array(tags).astype(numpy.long)
@@ -155,6 +183,7 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
     print(f"Epoch score {epoch_score / total_elements * 100}%")
     print(f"Epoch loss  {epoch_loss / total_elements * 100}%")
     return epoch_score / total_elements * 100
+
 
 def test_step(batch_size, data_transform, dataset_folder, model, test_data):
     model.train(False)
@@ -199,30 +228,18 @@ def split_data(dataset_data):
         for _, file, class_number in csv.reader(data):
             whole_data.append((file, class_number))
     random.shuffle(whole_data)
-    #train_size = len(whole_data) // 10
+    # train_size = len(whole_data) // 10
     test_data, train_data = [], whole_data
     return train_data, test_data
 
 
-def run_training(data_tags, dataset_folder, store_path, model_path="",frozen_layers=4):
-    model = create_net(model_path,frozen_layers)
+def run_training(data_tags, dataset_folder, store_path, model_path="", frozen_layers=4):
+    model = create_net(model_path, frozen_layers)
     train_model(model=model,
                 dataset_data=data_tags,
                 dataset_folder=dataset_folder,
                 store_path=store_path)
     torch.save(model.state_dict(), f"{store_path}/trained.mdl")
-
-
-def imgshow(images, classes):
-    import matplotlib.pyplot as plt
-
-    inp = images.numpy().transpose((1, 2, 0))
-    mean = numpy.array([0.485, 0.456, 0.406])
-    std = numpy.array([0.229, 0.224, 0.225])
-    inp = std * inp + mean
-    inp = numpy.clip(inp, 0, 1)
-    plt.imshow(inp)
-    plt.title(classes)
 
 
 TAGS_TRANSLATION = [
@@ -244,31 +261,25 @@ TAGS_TRANSLATION = [
     "Sports"
 ]
 
-def generate_response(model_path, data_folder,csv_out):
-    model = create_net(model_path)
 
-    transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406],
-                             [0.229, 0.224, 0.225])
-    ])
+def generate_response(model_path, data_folder, csv_out):
+    model = create_net(model_path)
 
     images = [f"{i}.jpg" for i in range(11100) if os.path.isfile(f"{data_folder}/{i}.jpg")]
 
-    with open(csv_out,"w") as out:
-        writer = csv.writer(out)
-    
-    for i in range(0,11100,35):
+    with open(csv_out, "w") as _:
+        pass
+
+    for i in range(0, 11100, 35):
         try:
-            batch_images = [transform(Image.open(f'{data_folder}/{img_name}').convert('RGB')).numpy() for img_name in images[i:i+35]]
+            batch_images = [TRANSFORM_NORMAL(Image.open(f'{data_folder}/{img_name}').convert('RGB')).numpy()
+                            for img_name in images[i:i + 35]]
         except IOError:
             continue
-            
+
         if not batch_images:
             break
-        
+
         array = numpy.array(batch_images).astype(numpy.float32)
         input_data = Variable(torch.from_numpy(array))
 
@@ -276,17 +287,17 @@ def generate_response(model_path, data_folder,csv_out):
             input_data = input_data.cuda()
 
         outs = model(input_data)
-        
-        image_names = [ img_name.split(".")[0] for img_name in images[i:i+35] ]
-        
+
+        image_names = [img_name.split(".")[0] for img_name in images[i:i + 35]]
+
         _, preds = torch.max(outs.data, 1)
 
         rows = []
         for i in range(len(image_names)):
-            row = image_names[i],int(preds[i])
+            row = image_names[i], int(preds[i])
             print(row)
             rows.append(row)
-            
-        with open(csv_out,"a") as out:
+
+        with open(csv_out, "a") as out:
             writer = csv.writer(out)
             writer.writerows(rows)
