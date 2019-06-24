@@ -51,7 +51,7 @@ def train_model(model,
                 store_path,
                 seed=None,
                 epochs=30,
-                batch_size=25):
+                batch_size=15):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD([p for p in model.parameters() if p.requires_grad], lr=0.001, momentum=0.9)
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
@@ -80,10 +80,10 @@ def train_model(model,
     for e in range(1, epochs + 1):
         random.shuffle(train_data)
         print(f"Epoch {e}")
-        train_step(batch_size + (e-1) * 7, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer,
+        ac = train_step(batch_size + (e-1) * 5, criterion, data_transform, dataset_folder, exp_lr_scheduler, model, optimizer,
                    train_data)
 
-        torch.save(model.state_dict(), f"{store_path}/state_epoch_{e}.mdl")
+        torch.save(model.state_dict(), f"{store_path}/state_epoch_{e}({int(ac*100)}).mdl")
 
         if e % 5:
             print(f"Test step (epoch {e})")
@@ -154,7 +154,7 @@ def train_step(batch_size, criterion, data_transform, dataset_folder, exp_lr_sch
 
     print(f"Epoch score {epoch_score / total_elements * 100}%")
     print(f"Epoch loss  {epoch_loss / total_elements * 100}%")
-
+    return epoch_score / total_elements * 100
 
 def test_step(batch_size, data_transform, dataset_folder, model, test_data):
     model.train(False)
